@@ -1,0 +1,51 @@
+version: "3.7"
+services:
+  app:
+    build:
+      args:
+        user: resources-app-user
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    container_name: resources-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - resources-network
+
+  db:
+    image: mysql:5.7
+    container_name: resources-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: resources
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: resources
+      MYSQL_PASSWORD: secret
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+      #volumes:
+      #- ./docker-compose/mysql:/docker-entrypoint-initdb.d
+      #- ./my-datavolume:/var/lib/mysql
+    networks:
+      - resources-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: resources-nginx
+    restart: unless-stopped
+    ports:
+      - "8083:80"
+    volumes:
+      - ./:/var/www
+      - ./nginx/:/etc/nginx/conf.d/
+    networks:
+      - resources-network
+
+networks:
+  resources-network:
+    driver: bridge
+volumes:
+  my-datavolume:
